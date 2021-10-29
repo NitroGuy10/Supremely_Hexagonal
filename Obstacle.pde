@@ -7,14 +7,14 @@ public class Obstacle
   
   public Obstacle (int thickness, boolean[] presence)
   {
-    creationTime = time;
+    creationTime = getTime();
     this.thickness = thickness;
     this.presence = presence;
   }
   
   public boolean update ()
   {
-    position = 1200 + (time - creationTime) * -speed;
+    position = 900 + (getTime() - creationTime) * -speed;
     
     if (position < 110 + 20 && !(position + thickness < 110 + 20))
     {

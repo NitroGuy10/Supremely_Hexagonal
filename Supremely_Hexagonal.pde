@@ -5,14 +5,16 @@ final int frameRate = 144;
 HashSet<Integer> keyboard = new HashSet();
 float speed = 1.0;
 float rotationSpeed = 0.001;
-float time = 0;
+double time = 0;
+double deltaTime = 0;
+float gameStartTime = 0;
 
 color highColor = color(200, 0, 0);
 color midColor = color(100, 0, 0);
 color lowColor = color(50, 0, 0);
 
-String animation = "init";
-float animationStart = -1;
+String gameState = "init";
+float animationStartTime = -1;
 
 ArrayList<Obstacle> obstacles = new ArrayList();
 boolean[] killZones = new boolean[6];
@@ -21,6 +23,7 @@ float playerPosition = 0;
 float functionalPlayerPosition = 0;
 boolean reverseControls = false;
 boolean gameOver = false;
+int numObstaclesTotal = 0;
 
 void setup ()
 {
@@ -30,16 +33,21 @@ void setup ()
 
 void draw ()
 {
+  if (gameState.equals("init"))
+  {
+    gameStartTime = millis();
+  }
   doKeyboard();
   if (!gameOver)
   {
-    time = frameCount * (frameRate / 60.0);
+    deltaTime = (((millis() - gameStartTime) / 10.5) * 2.4) - time;
+    time += deltaTime;
     
     background(lowColor);
     translate(width / 2, height / 2);
-    rotate(time * rotationSpeed);
+    rotate(getTime() * rotationSpeed);
     //scale(sin(time * 0.01) + 1);  // SUPER COOL GAME MODE
-    scale(sin(time * 0.015) * 0.1 + 1);
+    scale(sin(getTime() * 0.015) * 0.1 + 1);
     
     // Draw background
     noStroke();
@@ -96,14 +104,17 @@ void draw ()
       popMatrix();
     }
     
-    if (round(time) % 150 == 0)
+    // Spawn new obstacles
+    // TODO if gameState == "game_random"
+    if (time > (numObstaclesTotal + 1) * 300)
     {
       boolean[] presence = {true, true, true, true, true, true};
-      for (int i = 0; i < random(1, 3); i++)
+      for (int i = 0; i < random(1.01, 3); i++)
       {
         presence[(int) random(6)] = false;
       }
       obstacles.add(new Obstacle(30, presence));
+      numObstaclesTotal++;
     }
     
     // Update and display obstacles
@@ -126,7 +137,12 @@ void draw ()
     
   }
   
-  
+  // Draw stuff
+  if (gameState.equals("init"))
+  {
+    gameState = "animation_start";
+    animationStartTime = getTime();
+  }
 }
 
 void keyPressed ()
@@ -162,10 +178,15 @@ void doKeyboard ()
   }
   if (keyboard.contains(LEFT))
   {
-      playerPosition += 3.5;
+      playerPosition += 2 * deltaTime;
   }
   else if (keyboard.contains(RIGHT))
   {
-    playerPosition -= 3.5;
+    playerPosition -= 2 * deltaTime;
   }
+}
+
+float getTime ()
+{
+  return (float) time;
 }
