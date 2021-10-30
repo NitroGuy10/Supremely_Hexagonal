@@ -1,7 +1,7 @@
 public class Obstacle
 {
-  private int thickness;  // Because height, width, and length are already used by Processing lol
-  private float position;  // How close the bottom edge of the shape is to the center
+  public int thickness;  // Because height, width, and length are already used by Processing lol
+  public float position;  // How close the bottom edge of the shape is to the center
   private boolean[] presence;
   private float creationTime;
   
