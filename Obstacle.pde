@@ -14,7 +14,7 @@ public class Obstacle
   
   public boolean update ()
   {
-    position = 900 + (getTime() - creationTime) * -speed;
+    position = 900 + (getTime() - creationTime) * -1;  // * -speed
     
     if (position < 110 + 20 && !(position + thickness < 110 + 20))
     {

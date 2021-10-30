@@ -1,7 +1,6 @@
 import java.util.HashSet;
 import java.util.Arrays;
 
-final int frameRate = 144;
 HashSet<Integer> keyboard = new HashSet();
 float speed = 1.0;
 float rotation = 0;
@@ -10,33 +9,38 @@ double time = 0;
 double deltaTime = 0;
 float gameStartTime = 0;
 
-color highColor = color(200, 0, 0);
-color midColor = color(100, 0, 0);
-color lowColor = color(50, 0, 0);
+color highColor;
+color midColor;
+color lowColor;
 
 String gameState = "init";
 float animationStartTime = -1;
 float animationVariable = 0;
 
 ArrayList<Obstacle> obstacles = new ArrayList();
+float nextObstacleTypeTime = -1;
+float obstacleVariable = 0;
+final String[] obstacleTypes = {"game_random", "game_tri", "game_one"};
 boolean[] killZones = new boolean[6];
 
 float playerPosition = 0;
 float functionalPlayerPosition = 0;
 boolean reverseControls = false;
-boolean gameOver = false;
+boolean gameOver = true;
 int numObstaclesTotal = 0;
 
-// obstacles patterns
-// random
-// alternating
-// only one open
-// that one where you just go one direction
+////////// Settings //////////
+final int frameRate = 144;
+final boolean doObstacleTypes = false;
+final boolean doSuperCrazyWobble = false;
+//////////////////////////////
 
 void setup ()
 {
   size(1000, 1000, P2D);
   frameRate(frameRate);
+  
+  colorMode(HSB);
 }
 
 void draw ()
@@ -57,6 +61,14 @@ void draw ()
   // Game logic
   if (!gameOver)
   {    
+    speed = (float) (1 + (time / 2500));
+    
+    // Define colors
+    int hue = (int) (time / 60) % 256;
+    highColor = color(hue, 255, 200);
+    midColor = color(hue, 255, 100);
+    lowColor = color(hue, 255, 50);
+    
     // Calculate player position
     if (playerPosition >= 0)
     {
@@ -68,16 +80,65 @@ void draw ()
     }
     // println(playerPosition + " --> " + functionalPlayerPosition + " --> ZONE: " + ((int)functionalPlayerPosition / 126));
     
-    // Spawn new obstacles
-    // TODO if gameState == "game_random"
-    if (time > (numObstaclesTotal + 1) * 300)
+    if (doObstacleTypes && time > nextObstacleTypeTime)
     {
-      boolean[] presence = {true, true, true, true, true, true};
-      for (int i = 0; i < random(1.01, 3); i++)
+      nextObstacleTypeTime = getTime() + random(500, 2000);
+      obstacleVariable = -5;
+
+      String prevGameState = gameState;
+      while (prevGameState.equals(gameState))
       {
-        presence[(int) random(6)] = false;
+        gameState = obstacleTypes[(int) random(obstacleTypes.length)];
       }
-      obstacles.add(new Obstacle(30, presence));
+      println(gameState);
+    }
+    
+    
+    // Spawn new obstacles
+    if (time > (numObstaclesTotal + 1) * (100 - speed * 10))
+    {
+      if (gameState.equals("game_random"))
+      {
+        if (obstacleVariable < 0) {}
+        else if (obstacleVariable % 4 == 0)
+        {
+          boolean[] presence = {true, true, true, true, true, true};
+          for (int i = 0; i < random(1.01, 3); i++)
+          {
+            presence[(int) random(6)] = false;
+          }
+          obstacles.add(new Obstacle(30, presence));
+        }
+        obstacleVariable++;
+      }
+      else if (gameState.equals("game_tri"))
+      {
+        if (obstacleVariable < 0) {}
+        else if (obstacleVariable % 3 == 0)
+        {
+          if (random(1) > 0.5)
+          {
+            obstacles.add(new Obstacle(30, new boolean[] {true, false, true, false, true, false}));
+          }
+          else
+          {
+            obstacles.add(new Obstacle(30, new boolean[] {false, true, false, true, false, true}));
+          }
+        }
+        obstacleVariable++;
+      }
+      else if (gameState.equals("game_one"))
+      {
+        if (obstacleVariable < 0) {}
+        else if (obstacleVariable % 5 == 0)
+        {
+          boolean[] presence = {true, true, true, true, true, true};
+          presence[(int) random(6)] = false;
+          obstacles.add(new Obstacle(30, presence));
+        }
+        obstacleVariable++;
+      }
+      
       numObstaclesTotal++;
     }
     
@@ -148,7 +209,8 @@ void draw ()
       }
       if (obstacles.isEmpty())
       {
-        gameState = "game";
+        gameState = "game_random";
+        numObstaclesTotal = 0;
         gameOver = false;
         speed = 1.0;
       }
@@ -156,15 +218,21 @@ void draw ()
   }
   
   /////////// Draw stuff ///////////
-  println(time);
+  //println(time);
   
   rotation += (getDeltaTime() * rotationSpeed);
   
   background(lowColor);
   translate(width / 2, height / 2);
-  scale(sin(getTime() * 0.015) * 0.1 + 1);
+  if (doSuperCrazyWobble)
+  {
+    scale(sin(getTime() * 0.01) + 1);
+  }
+  else
+  {
+    scale(sin(getTime() * 0.015 * (speed / 10 + 1)) * 0.1 + 1);
+  }
   rotate(rotation);
-  //scale(sin(getTime() * 0.01) + 1);  // SUPER COOL GAME MODE
   
   
   // Draw background
@@ -219,7 +287,7 @@ void draw ()
     rotate(-rotation);
     textAlign(CENTER, CENTER);
     textSize(80);
-    text(numObstaclesTotal, 0, 0);
+    text(numObstaclesTotal - 3, 0, 0);
     popMatrix();
   }
 }
@@ -256,11 +324,11 @@ void doKeyboard ()
   }
   if (keyboard.contains(LEFT))
   {
-      playerPosition += 2 * deltaTime;
+      playerPosition += (1.825 + (speed / 8)) * deltaTime;
   }
   else if (keyboard.contains(RIGHT))
   {
-    playerPosition -= 2 * deltaTime;
+    playerPosition -= (1.825 + (speed / 8)) * deltaTime;
   }
 }
 
@@ -280,7 +348,6 @@ void startGame ()
   gameState = "animation_start";
   //gameState = "game";
   rotationSpeed = 0.001;
-  numObstaclesTotal = 0;
   gameStartTime = millis() + 1;
   time = 1;
 }
