@@ -28,6 +28,7 @@ float functionalPlayerPosition = 0;
 boolean reverseControls = false;
 boolean gameOver = true;
 int numObstaclesTotal = 0;
+int score = -3;
 
 ////////// Settings //////////
 final int frameRate = 144;
@@ -108,6 +109,7 @@ void draw ()
             presence[(int) random(6)] = false;
           }
           obstacles.add(new Obstacle(30, presence));
+          score++;
         }
         obstacleVariable++;
       }
@@ -124,6 +126,7 @@ void draw ()
           {
             obstacles.add(new Obstacle(30, new boolean[] {false, true, false, true, false, true}));
           }
+          score++;
         }
         obstacleVariable++;
       }
@@ -135,6 +138,7 @@ void draw ()
           boolean[] presence = {true, true, true, true, true, true};
           presence[(int) random(6)] = false;
           obstacles.add(new Obstacle(30, presence));
+          score++;
         }
         obstacleVariable++;
       }
@@ -287,7 +291,7 @@ void draw ()
     rotate(-rotation);
     textAlign(CENTER, CENTER);
     textSize(80);
-    text(numObstaclesTotal - 3, 0, 0);
+    text(score, 0, 0);
     popMatrix();
   }
 }
