@@ -217,6 +217,7 @@ void draw ()
         numObstaclesTotal = 0;
         gameOver = false;
         speed = 1.0;
+        score = -3;
       }
     }
   }
